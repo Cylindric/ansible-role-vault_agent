@@ -1,25 +1,51 @@
 Vault Agent
 ===========
 
-A brief description of the role goes here.
+This role will deploy a HashiCorp Vault agent onto the target server. It will
+then deploy an AppRole secret ID and secret key onto the server.
+
+In combination with the `vault_agent_templates` role will make deploying
+certificates and tokens from Vault easy.
 
 Requirements
 ------------
 
-1. If the parameter `vault.app_role` is set, then:
-   1. The Vault `AppRole` auth method must be mounted as `approle`.
-   1. An AppRole must exist for the Workspace, as specified in the `vault.app_role` parameter.
+1. A working and accessible HashiCorp Vault server
+2. If the parameter `vault.app_role` is set, then:
+   1. Ansible configured to be able to use `lookup(community.hashi_vault.vault_read)`
+   2. The Vault `AppRole` auth method must be mounted as `approle`.
+   3. An AppRole must exist for the Workspace, as specified in the `vault.app_role` parameter.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+* `vault_server`  
+  Should point at the Vault server URL.  
+  default "`https://vault:8200`"
+
+* `vault_app_role`  
+  The AppRole to use to generate a Secret ID and Key file.  
+  default "`workspace-approle`"
+
+* `vault_source_url`  
+  The download URL for the Vault binary.  
+   default "`https://releases.hashicorp.com/vault/1.12.3/vault_1.12.3_linux_amd64.zip`"
+
+* `vault_source_checksum`  
+  The checksum for the downloaded Vault zip, to prevent unecessary redownloads.  
+  default "`sha256:f4825bad06e77687b407eff7423acb9238adfd545d7345f2a0bb9e81b0c4b1eb`"
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+This role makes use of `community.hashi_vault.vault_read` to retrieve secrets from Vault.
 
+`requirements.yml`:
+```yaml
+collections:
+- name: community.hashi_vault
+  version: ">=4.1.0"
+```
 Example Playbook
 ----------------
 
@@ -29,6 +55,7 @@ Including an example of how to use your role (for instance, with variables passe
 - hosts: servers
   roles:
     - role: vault_agent
+      become: yes
       vars:
         vault_server: https://vault:8200/
         vault_app_role: workspace-approle
