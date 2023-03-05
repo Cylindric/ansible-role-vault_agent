@@ -1,5 +1,5 @@
-Role Name
-=========
+Vault Agent
+===========
 
 A brief description of the role goes here.
 
@@ -32,19 +32,6 @@ Including an example of how to use your role (for instance, with variables passe
       vars:
         vault_server: https://vault:8200/
         vault_app_role: workspace-approle
-        vault_pki_engine: pki-int-ca
-        vault_certificates:
-          - name: "host"
-            common_name: "{{ inventory_hostname }}"
-            alt_names: "{{ inventory_hostname }}"
-            ip_sans: "{{ ansible_default_ipv4.address }}"
-            cert_file: "/etc/vault.d/"
-            key_file: "/etc/vault.d/"
-            ca_file: "/etc/vault.d/"
-            ttl: "1h"
-        vault_tokens:
-          - name: test
-            token_file: "/etc/vault.d/test-token"
 ```
 
 License

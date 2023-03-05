@@ -1,7 +1,8 @@
 ---
 galaxy_info:
-  author: Cylindric
   namespace: homelab
+  role_name: vault_agent
+  author: Cylindric
   description: Vault Agent Configuration Role
   company: CylCorp
   license: Apache-2.0

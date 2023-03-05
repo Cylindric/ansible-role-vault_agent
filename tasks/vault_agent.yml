@@ -36,30 +36,6 @@
     create_home: false
     shell: /bin/false
 
-- name: HomeLab | Vault Agent | Certificate templates
-  ansible.builtin.template:
-    src: "templates/certificate.tmpl"
-    dest: "/etc/vault.d/cert-{{ item.name }}.tmpl"
-    variable_start_string: "<<"
-    variable_end_string: ">>"
-    owner: "{{ vault_user }}"
-    group: "{{ vault_group }}"
-    mode: "0664"
-  loop: "{{ vault_certificates }}"
-  notify: Restart Vault Agent
-
-- name: HomeLab | Vault Agent | Token templates
-  ansible.builtin.template:
-    src: "templates/token.tmpl"
-    dest: "/etc/vault.d/token-{{ item.name }}.tmpl"
-    variable_start_string: "<<"
-    variable_end_string: ">>"
-    owner: "{{ vault_user }}"
-    group: "{{ vault_group }}"
-    mode: "0664"
-  loop: "{{ vault_tokens }}"
-  notify: Restart Vault Agent
-
 - name: HomeLab | Vault Agent | Configure service
   ansible.builtin.template:
     src: vault-agent.service
@@ -86,6 +62,41 @@
     owner: "{{ vault_user }}"
     group: "{{ vault_group }}"
     mode: '0640'
+  notify: Restart Vault Agent
+  register: config_template
+
+# We use blockinfile here so that other services can later add templates to this file
+# without them being clobbered every time this role is run.
+- name: HomeLab | Vault Agent | Configure vault
+  ansible.builtin.blockinfile:
+    dest: /etc/vault.d/vault-agent.hcl
+    create: true
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: '0660'
+    marker: "# {mark} ANSIBLE MANAGED VAULT AGENT CONFIG BLOCK"
+    block: |
+      vault {
+        address = "{{ vault_service_settings.vault_server }}"
+      }
+      listener "tcp" {
+        address = "127.0.0.1:8201"
+        tls_disable = true
+      }
+      auto_auth {
+        method "approle" {
+          config = {
+            role_id_file_path = "/etc/vault.d/role-id"
+            secret_id_file_path = "/etc/vault.d/secret-id"
+            remove_secret_id_file_after_reading = false
+          }
+        }
+      }
+      cache {
+        use_auto_auth_token = true
+      }
+      exit_after_auth = false
+      pid_file = "/opt/vault/vault-agent.pid"
   notify: Restart Vault Agent
 
 - name: HomeLab | Vault Agent | Service
