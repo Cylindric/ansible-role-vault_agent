@@ -1,0 +1,4 @@
+---
+vault_service_name: vault-agent
+vault_user: vault
+vault_group: root

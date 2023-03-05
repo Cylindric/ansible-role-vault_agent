@@ -1,0 +1,30 @@
+---
+- name: HomeLab | App Role | Get App Role ID
+  ansible.builtin.set_fact:
+    app_role_id: "{{ lookup('community.hashi_vault.vault_read', 'auth/approle/role/' + vault_app_role + '/role-id').data.role_id or '' }}"
+  delegate_to: localhost
+
+- name: HomeLab | App Role | Get Secret ID
+  ansible.builtin.set_fact:
+    secret_id: "{{ lookup('community.hashi_vault.vault_write', 'auth/approle/role/' + vault_app_role + '/secret-id').data.secret_id or '' }}"
+  delegate_to: localhost
+
+- name: HomeLab | Vault | Create directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: vault
+    group: root
+    mode: '0775'
+  loop:
+    - /etc/vault.d
+    - /opt/vault
+
+- name: Deploy AppRole Secrets
+  ansible.builtin.include_tasks: approle.yml
+
+- name: Install Vault Agent
+  ansible.builtin.include_tasks: vault_agent.yml
+
+- name: Flush all handlers
+  ansible.builtin.meta: flush_handlers

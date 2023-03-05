@@ -1,0 +1,10 @@
+{{- with secret "/auth/token/create" ""
+{% if item.policies is defined and item.policies|length %}
+    "policies=<< item.policies >>" "no_default_policy=true" 
+{% endif %}
+{% if item.ttl is defined and item.ttl|length %}
+    "ttl=<< item.ttl >>"
+{% endif %}
+-}}
+{{- .Auth.ClientToken -}}
+{{- end -}}

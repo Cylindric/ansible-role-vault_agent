@@ -1,0 +1,18 @@
+---
+- name: HomeLab | App Role | Create Role ID file
+  when: "app_role_id | length > 0"
+  ansible.builtin.copy:
+    dest: /etc/vault.d/role-id
+    content: "{{ app_role_id }}"
+    owner: vault
+    group: root
+    mode: '0660'
+
+- name: HomeLab | App Role | Create Secret ID file
+  when: "secret_id | length > 0"
+  ansible.builtin.copy:
+    dest: /etc/vault.d/secret-id
+    content: "{{ secret_id }}"
+    owner: vault
+    group: root
+    mode: '0660'

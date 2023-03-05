@@ -1,0 +1,25 @@
+---
+vault_server: https://vault:8200
+vault_app_role: workspace-approle
+vault_source_url: https://releases.hashicorp.com/vault/1.12.3/vault_1.12.3_linux_amd64.zip
+vault_source_checksum: sha256:f4825bad06e77687b407eff7423acb9238adfd545d7345f2a0bb9e81b0c4b1eb
+vault_pki_engine: pki
+vault_certificates: []
+vault_tokens: []
+
+# Samples
+vault_certificates_examples:
+  - name: "test_both"
+    common_name: "{{ inventory_hostname }}.example"
+    alt_names: "testing.example"
+    ip_sans: "{{ ansible_default_ipv4.address }}"
+    cert_file: "/tmp/cert.pem"
+    key_file: "/tmp/cert-key.pem"
+    ca_file: "/tmp/ca.pem"
+    policy: "server_cert"
+    ttl: "1h"
+
+vault_tokens_examples:
+  - name: test
+    token_file: "/tmp/token"
+    ttl: "1h"

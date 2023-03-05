@@ -1,0 +1,95 @@
+---
+- name: HomeLab | Vault Agent | Download vault binary
+  ansible.builtin.get_url:
+    url: "{{ vault_source_url }}"
+    dest: /tmp/vault.zip
+    checksum: "{{ vault_source_checksum }}"
+    owner: root
+    group: root
+    mode: '0644'
+  register: vault_downloaded
+
+- name: HomeLab | Vault Agent | Extract vault binary
+  when: vault_downloaded.changed # noqa: no-handler
+  ansible.builtin.unarchive:
+    src: /tmp/vault.zip
+    dest: /tmp
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: yes
+  register: vault_unzipped
+
+- name: HomeLab | Vault Agent | Install vault binary
+  when: vault_unzipped.changed # noqa: no-handler
+  ansible.builtin.copy:
+    src: /tmp/vault
+    dest: "/usr/bin/{{ vault_service_name }}"
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: yes
+
+- name: HomeLab | Vault Agent | Create user
+  ansible.builtin.user:
+    name: "{{ vault_user }}"
+    create_home: false
+    shell: /bin/false
+
+- name: HomeLab | Vault Agent | Certificate templates
+  ansible.builtin.template:
+    src: "templates/certificate.tmpl"
+    dest: "/etc/vault.d/cert-{{ item.name }}.tmpl"
+    variable_start_string: "<<"
+    variable_end_string: ">>"
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0664"
+  loop: "{{ vault_certificates }}"
+  notify: Restart Vault Agent
+
+- name: HomeLab | Vault Agent | Token templates
+  ansible.builtin.template:
+    src: "templates/token.tmpl"
+    dest: "/etc/vault.d/token-{{ item.name }}.tmpl"
+    variable_start_string: "<<"
+    variable_end_string: ">>"
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0664"
+  loop: "{{ vault_tokens }}"
+  notify: Restart Vault Agent
+
+- name: HomeLab | Vault Agent | Configure service
+  ansible.builtin.template:
+    src: vault-agent.service
+    dest: "/usr/lib/systemd/system/{{ vault_service_name }}.service"
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: '0644'
+  notify: Restart Vault Agent
+
+- name: HomeLab | Vault Agent | Create env file
+  ansible.builtin.copy:
+    dest: /etc/vault.d/vault.env
+    content: ""
+    force: true
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: '0660'
+  notify: Restart Vault Agent
+
+- name: HomeLab | Vault Agent | Configure vault
+  ansible.builtin.template:
+    src: vault-agent.hcl
+    dest: /etc/vault.d/vault-agent.hcl
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: '0640'
+  notify: Restart Vault Agent
+
+- name: HomeLab | Vault Agent | Service
+  ansible.builtin.service:
+    name: "{{ vault_service_name }}"
+    state: started
+    enabled: yes
