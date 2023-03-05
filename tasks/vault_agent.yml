@@ -55,16 +55,6 @@
     mode: '0660'
   notify: Restart Vault Agent
 
-- name: HomeLab | Vault Agent | Configure vault
-  ansible.builtin.template:
-    src: vault-agent.hcl
-    dest: /etc/vault.d/vault-agent.hcl
-    owner: "{{ vault_user }}"
-    group: "{{ vault_group }}"
-    mode: '0640'
-  notify: Restart Vault Agent
-  register: config_template
-
 # We use blockinfile here so that other services can later add templates to this file
 # without them being clobbered every time this role is run.
 - name: HomeLab | Vault Agent | Configure vault
