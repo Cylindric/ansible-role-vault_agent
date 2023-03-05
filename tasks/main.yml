@@ -25,6 +25,3 @@
 
 - name: Install Vault Agent
   ansible.builtin.include_tasks: vault_agent.yml
-
-- name: Flush all handlers
-  ansible.builtin.meta: flush_handlers
